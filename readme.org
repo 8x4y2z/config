@@ -1,0 +1,1 @@
+*This is sample emacs init file*
