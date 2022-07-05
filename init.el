@@ -247,6 +247,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General Tweaks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Stop littering undo tree files
+(setq undo-tree-auto-save-history nil)
+
 ;; Only allow encrypted auth sources
 (setq auth-sources '((:source "~/.authinfo.gpg")))
 
