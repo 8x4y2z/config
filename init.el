@@ -100,7 +100,7 @@
   (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin")))
 
 ;; Set font size. Font size is set to my:font-size/10
-(defvar my:font-size 90)
+(defvar my:font-size 110)
 
 (defun my:set-custom-faces()
   "Set custom faces after the theme is loaded."
@@ -1580,8 +1580,6 @@
       (todo "NEXT" nil))
      nil)))
 
-;; Show the daily agenda by default.
-(setq org-agenda-span 'day)
 
 ;; (setq org-tag-alist '(("important" . ?i)))
 
@@ -2326,9 +2324,9 @@
 ;; Hide the scroll bar
 (scroll-bar-mode -1)
 ;; Make mode bar small
-;; (set-face-attribute 'mode-line nil  :height my:font-size)
+(set-face-attribute 'mode-line nil  :height my:font-size)
 ;; Set the header bar font
-;; (set-face-attribute 'header-line nil  :height my:font-size)
+(set-face-attribute 'header-line nil  :height my:font-size)
 ;; Set default window size and position
 (setq default-frame-alist
       '((top . 0) (left . 0) ;; position
@@ -2339,7 +2337,7 @@
 ;; Enable winner-mode
 (winner-mode 1)
 ;; Set the font to size 9 (90/10).
-;; (set-face-attribute 'default nil :height my:font-size)
+(set-face-attribute 'default nil :height my:font-size)
 
 (setq-default indicate-empty-lines t)
 (when (not indicate-empty-lines)
@@ -2499,14 +2497,35 @@
 ;;                    "remote-shell" "/usr/bin/bash"))
 ;; ;; (setq tramp-default-method "ssh")
 
+;; Disable menu bar
+(menu-bar-mode -1)
+
 ;; ;; Zones
 (require 'zones)
 
+;; transpose windows
+(use-package transpose-frame
+  :ensure t
+  )
 ;; Dont ask for confirmation when exiting emacs with a process
 (setq confirm-kill-processes nil)
 ;; Dont ask confimation when killing buffer witha process
 (setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
+;; plantuml
+(use-package plantuml-mode
+  :ensure t
+  :config
+  (setq plantuml-jar-path "/home/pupil/install/plantuml.jar")
+  (setq plantuml-default-exec-mode 'jar)
+  (setq org-plantuml-jar-path (expand-file-name "/home/pupil/install/plantuml.jar"))
+  (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+  (with-eval-after-load "org"
+    (add-to-list
+     'org-src-lang-modes '("plantuml" . plantuml))
+    )
+  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
+  )
 
 ;;; init  ends here
 (custom-set-variables
@@ -2516,6 +2535,23 @@
  ;; If there is more than one, they won't work right.
  '(c-noise-macro-names '("constexpr"))
  '(package-selected-packages
-   '(cmake-font-lock powerline doom-themes highlight-indent-guides prettier-js tide auctex lua-mode yasnippet-snippets yasnippet flycheck-rust rust-mode json-mode yaml-mode cmake-mode gitignore-mode git-timemachine diff-hl forge magit cuda-mode hungry-delete ein skewer-mode web-mode google-c-style js2-mode vlf writegood-mode multiple-cursors string-inflection flycheck company-box company-prescient company lsp-ui lsp-pyright modern-cpp-font-lock clang-format pyvenv python-black realgud visual-regexp-steroids undo-tree zzz-to-char avy which-key beacon rainbow-delimiters origami edit-server pinentry rg wgrep winum lsp-ivy flyspell-correct-ivy counsel-etags counsel-projectile counsel swiper ivy-prescient ivy use-package-hydra hydra all-the-icons ws-butler diminish auto-package-update async esup use-package)))
+   '(transpose-frame transpose-fram plantuml-mode cmake-font-lock powerline doom-themes highlight-indent-guides prettier-js tide auctex lua-mode yasnippet-snippets yasnippet flycheck-rust rust-mode json-mode yaml-mode cmake-mode gitignore-mode git-timemachine diff-hl forge magit cuda-mode hungry-delete ein skewer-mode web-mode google-c-style js2-mode vlf writegood-mode multiple-cursors string-inflection flycheck company-box company-prescient company lsp-ui lsp-pyright modern-cpp-font-lock clang-format pyvenv python-black realgud visual-regexp-steroids undo-tree zzz-to-char avy which-key beacon rainbow-delimiters origami edit-server pinentry rg wgrep winum lsp-ivy flyspell-correct-ivy counsel-etags counsel-projectile counsel swiper ivy-prescient ivy use-package-hydra hydra all-the-icons ws-butler diminish auto-package-update async esup use-package)))
 (put 'upcase-region 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(avy-lead-face ((t (:foreground "black" :background "#F0F3BE" :bold t :underline t))))
+ '(avy-lead-face-0 ((t (:foreground "black" :background "#F0F3BE" :bold t :underline t))))
+ '(company-tooltip ((t (:background nil))))
+ '(company-tooltip-selection ((t (:background nil :underline t))))
+ '(diff-hl-change ((t (:background "#5f00af" :foreground "#5f00af"))))
+ '(highlight ((t (:background nil :foreground nil :underline t))))
+ '(ivy-current-match ((t (:background nil :underline t))))
+ '(ivy-minibuffer-match-face-1 ((t (:background "#BEF3D3" :foreground "black" :bold t))))
+ '(powerline-active1 ((t (:background "grey" :foreground "black" :bold t :underline t))))
+ '(powerline-active2 ((t (:background "grey" :foreground "black" :bold t :underline t))))
+ '(swiper-match-face-1 ((t (:foregound "black" :background "#BEF3D3" :bold t))))
+ '(which-func ((t (:foreground "#8fb28f")))))
