@@ -1871,8 +1871,10 @@
   (setq org-noter-notes-window-location 'other-frame
         ;; stop opening new frames please
         org-noter-always-create-frame nil
+        ;; See whole frame
+        org-noter-hide-other nil
         ;; set path
-        org-noter-notes-search-path '(org_notes)
+        org-noter-notes-search-path (list org_notes)
         )
   )
 
@@ -2246,7 +2248,7 @@
 ;; the above seems to not be an issue with lsp, but it is still nice to be
 ;; able to only call up the snippets.
 (use-package company-yasnippet
-  :bind ("c-m-y" . company-yasnippet)
+  :bind ("C-M-y" . company-yasnippet)
   :after (yasnippet company)
   )
 
@@ -2263,8 +2265,8 @@
   :ensure t
   :mode ("\\.md\\'" "\\.markdown\\'")
   :config
-  (define-key markdown-mode-map (kbd "m-p") nil)
-  (define-key markdown-mode-map (kbd "m-n") nil))
+  (define-key markdown-mode-map (kbd "M-p") nil)
+  (define-key markdown-mode-map (kbd "M-n") nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lua-mode
