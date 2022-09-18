@@ -10,7 +10,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; set some variables for org eco-system
-;; (defvar org_notes "~/org/notes")
+(defvar org_notes "~/org/notes")
 
 ;; Choose ycmd or lsp for C/C++ completion. lsp or ycmd
 (defvar my:cxx-completer "lsp")
@@ -1691,7 +1691,7 @@
     (setq bibtex-completion-bibliography '("~/Zotero/library.bib"))
     (setq reftex-default-bibliography '("~/Zotero/library.bib"))
     ;; Point bibtex to Notes
-    ;; (setq bibtex-completion-notes-path org_notes)
+    (setq bibtex-completion-notes-path org_notes)
     ;; the line below tells helm-bibtex to find the path to the pdf
     ;; in the "file" field in the .bib file.
     (setq bibtex-completion-pdf-field "file")
@@ -1712,7 +1712,7 @@
     ;; i therefore changed the default type to the latter.
     (setq org-ref-default-citation-link "citep")
     ;; Point To Notes Directory
-    ;; (setq org-ref-notes-directory org_notes)
+    (setq org-ref-notes-directory org_notes)
 
     )
 
@@ -1747,7 +1747,7 @@
 (use-package org-roam
   :ensure t
   :custom
-  (org-roam-directory (file-truename "~/org/notes/"))
+  (org-roam-directory (file-truename org_notes))
   (org-roam-completion-everywhere t)
   (org-roam-node-display-template
    (concat "${type:20} ${title:*} "
@@ -1872,7 +1872,7 @@
         ;; stop opening new frames please
         org-noter-always-create-frame nil
         ;; set path
-        ;; org-noter-notes-search-path '(org_notes)
+        org-noter-notes-search-path '(org_notes)
         )
   )
 
