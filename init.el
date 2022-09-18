@@ -9,6 +9,9 @@
 ;; up packages.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; set some variables for org eco-system
+;; (defvar org_notes "~/org/notes")
+
 ;; Choose ycmd or lsp for C/C++ completion. lsp or ycmd
 (defvar my:cxx-completer "lsp")
 
@@ -45,7 +48,7 @@
 ;; - spacemacs-dark
 ;; - sourcerer
 ;; - doom-* (the doom themes https://github.com/hlissner/emacs-doom-themes)
-(defvar my:use-theme 'doom-one-light)
+(defvar my:use-theme 'doom-dracula)
 ;; (defvar my:use-theme 'doom-vibrant)
 ;; (defvar my:use-theme nil)
 
@@ -120,23 +123,23 @@
    )
 
   ;; Customize powerline colors. I like purple pink-ish
-  (custom-set-faces
-   '(powerline-active1
-     ((t (:background "grey" :foreground "black" :bold t :underline t))))
-   '(powerline-active2
-     ((t (:background "grey" :foreground "black" :bold t :underline t))))
-   )
+  ;; (custom-set-faces
+  ;;  '(powerline-active1
+  ;;    ((t (:background "grey" :foreground "black" :bold t :underline t))))
+  ;;  '(powerline-active2
+  ;;    ((t (:background "grey" :foreground "black" :bold t :underline t))))
+  ;;  )
 
-  (set-face-attribute 'powerline-inactive1 nil :background
-                      (face-attribute 'powerline-active1 :background))
-  (set-face-attribute 'powerline-inactive2 nil :background
-                      (face-attribute 'powerline-active2 :background))
-  (set-face-attribute 'powerline-inactive1 nil :foreground
-                      (face-attribute 'powerline-active1 :foreground))
-  (set-face-attribute 'powerline-inactive2 nil :foreground
-                      (face-attribute 'powerline-active2 :foreground))
-  (set-face-attribute 'region nil :background "#bcc6cc")
-  (set-face-attribute 'show-paren-match nil :foreground nil :background "yellow")
+  ;; (set-face-attribute 'powerline-inactive1 nil :background
+  ;;                     (face-attribute 'powerline-active1 :background))
+  ;; (set-face-attribute 'powerline-inactive2 nil :background
+  ;;                     (face-attribute 'powerline-active2 :background))
+  ;; (set-face-attribute 'powerline-inactive1 nil :foreground
+  ;;                     (face-attribute 'powerline-active1 :foreground))
+  ;; (set-face-attribute 'powerline-inactive2 nil :foreground
+  ;;                     (face-attribute 'powerline-active2 :foreground))
+  ;; (set-face-attribute 'region nil :background "#bcc6cc")
+  ;; (set-face-attribute 'show-paren-match nil :foreground nil :background "yellow")
 
 
   ;; Custom face for avy
@@ -651,6 +654,7 @@
     :ensure t
     :bind (("M-x" . counsel-M-x)
            ("C-x C-f" . counsel-find-file)
+           ("<f1>" . nil)
            ("<f1> f" . counsel-describe-function)
            ("<f1> v" . counsel-describe-variable)
            ("<f1> l" . counsel-find-library)
@@ -1534,7 +1538,20 @@
   (define-key org-mode-map (kbd "C-c c") 'org-capture)
   (define-key org-mode-map (kbd "C-c n n") 'org-id-get-create)
   (define-key org-mode-map (kbd "C-x n n") 'org-toggle-narrow-to-subtree)
+  (setq org-link-frame-setup '((file . find-file)))
   ))
+
+;; Academic paper writing
+(with-eval-after-load 'ox-latex
+  (add-to-list 'org-latex-classes
+               '("apa6"
+                 "\\documentclass{apa6}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  )
 
 ;; Task Management
 (setq org-capture-templates
@@ -1665,7 +1682,59 @@
   (add-hook 'org-mode-hook #'writegood-mode)
   )
 
-;; Org Roam
+;; ivy bibtex
+(with-eval-after-load "ivy"
+  (use-package ivy-bibtex
+    :ensure t
+    :config
+    ;; In the lines below I point ivy-bibtex to my default library file.
+    (setq bibtex-completion-bibliography '("~/Zotero/library.bib"))
+    (setq reftex-default-bibliography '("~/Zotero/library.bib"))
+    ;; Point bibtex to Notes
+    ;; (setq bibtex-completion-notes-path org_notes)
+    ;; the line below tells helm-bibtex to find the path to the pdf
+    ;; in the "file" field in the .bib file.
+    (setq bibtex-completion-pdf-field "file")
+    :hook (tex . (lambda () (define-key tex-mode-map "\c-ch" 'ivy-bibtex))))
+  ;; i also like to be able to view my library from anywhere in emacs, for example if i want to read a paper.
+  ;; i added the keybind below for that.
+  )
+
+;; org-ref
+(use-package org-ref
+  :ensure t
+  :init
+  (use-package "org-ref-ivy")
+  :config
+    ;; again, we can set the default library
+    (setq org-ref-default-bibliography "~/zotero/library.bib")
+    ;; the default citation type of org-ref is cite:, but i use citep: much more often
+    ;; i therefore changed the default type to the latter.
+    (setq org-ref-default-citation-link "citep")
+    ;; Point To Notes Directory
+    ;; (setq org-ref-notes-directory org_notes)
+
+    )
+
+;; this is to use pdf-tools instead of doc-viewer
+(use-package pdf-tools
+  :pin manual ;; manually update
+  :load-path "site-lisp/pdf-tools/lisp"
+  :defer t
+  :init
+  (pdf-loader-install)
+  :config
+  ;; this means that pdfs are fitted to width by default when you open them
+  (setq-default pdf-view-display-size 'fit-width)
+  ;; automatically annotate highlights
+  (setq pdf-annot-activate-created-annotations t)
+  ;; use normal isearch
+  (define-key pdf-view-mode-map (kbd "c-s") 'isearch-forward)
+  )
+
+
+
+;; org roam
 (defun my/counsel-rg-org-roam-directory ()
   (interactive)
   (counsel-rg nil org-roam-directory))
@@ -1676,65 +1745,68 @@
   (org-roam-db-sync))
 
 (use-package org-roam
+  :ensure t
   :custom
-  (org-roam-directory (file-truename "~/org/"))
+  (org-roam-directory (file-truename "~/org/notes/"))
   (org-roam-completion-everywhere t)
   (org-roam-node-display-template
    (concat "${type:20} ${title:*} "
            (propertize "${tags:20}" 'face 'org-tag)))
   :bind
-  ("C-c n l" . org-roam-buffer-toggle)
+  (("C-c n l" . org-roam-buffer-toggle)
   ("C-c n f" . org-roam-node-find)               ; search with: title, tags, notebook
-  ("C-c n F" . my/counsel-rg-org-roam-directory) ; full text search
+  ("C-c n f" . my/counsel-rg-org-roam-directory) ; full text search
   ("C-c n g" . org-roam-graph)
   ("C-c n i" . org-roam-node-insert)
   ("C-c n c" . org-roam-capture)
   ("C-c n r" . org-roam-node-random)
   ("C-c n t" . org-roam-tag-add)
+  :map org-mode-map
+  ("c-m-i" . completion-at-point))
   :init
   (setq org-roam-v2-ack t)
   :config
   (org-roam-db-autosync-mode)
 
   (cl-defmethod org-roam-node-type ((node org-roam-node))
-    "Return the TYPE of NODE."
+    "return the type of node."
     (condition-case nil
         (directory-file-name
          (file-name-directory
           (file-relative-name (org-roam-node-file node) org-roam-directory)))
       (error "")))
 
-  ;; Change file-name (slug) creation
-  ;; Replace whitespace with dashes instead of underscores.
-  ;; See
+  ;; change file-name (slug) creation
+  ;; replace whitespace with dashes instead of underscores.
+  ;; see
   ;; - https://github.com/org-roam/org-roam/issues/686
-  ;; - https://github.com/org-roam/org-roam/pull/1544[[id:2022-06-12T213159.588064][test mest hest]]
+  ;; - https://github.com/org-roam/org-roam/pull/1544[[id:2022-06-12t213159.588064][test mest hest]]
   ;; - https://www.reddit.com/r/emacs/comments/veesun/orgroam_is_absolutely_fantastic/
   (cl-defmethod org-roam-node-slug ((node org-roam-node))
-    "Return the slug of NODE."
+    "return the slug of node."
     (let ((title (org-roam-node-title node))
-          (slug-trim-chars '(;; Combining Diacritical Marks https://www.unicode.org/charts/PDF/U0300.pdf
-                             768 ; U+0300 COMBINING GRAVE ACCENT
-                             769 ; U+0301 COMBINING ACUTE ACCENT
-                             770 ; U+0302 COMBINING CIRCUMFLEX ACCENT
-                             771 ; U+0303 COMBINING TILDE
-                             772 ; U+0304 COMBINING MACRON
-                             774 ; U+0306 COMBINING BREVE
-                             775 ; U+0307 COMBINING DOT ABOVE
-                             776 ; U+0308 COMBINING DIAERESIS
-                             777 ; U+0309 COMBINING HOOK ABOVE
-                             778 ; U+030A COMBINING RING ABOVE
-                             779 ; U+030B COMBINING DOUBLE ACUTE ACCENT
-                             780 ; U+030C COMBINING CARON
-                             795 ; U+031B COMBINING HORN
-                             803 ; U+0323 COMBINING DOT BELOW
-                             804 ; U+0324 COMBINING DIAERESIS BELOW
-                             805 ; U+0325 COMBINING RING BELOW
-                             807 ; U+0327 COMBINING CEDILLA
-                             813 ; U+032D COMBINING CIRCUMFLEX ACCENT BELOW
-                             814 ; U+032E COMBINING BREVE BELOW
-                             816 ; U+0330 COMBINING TILDE BELOW
-                             817 ; U+0331 COMBINING MACRON BELOW
+          (slug-trim-chars '(;; combining diacritical marks https://www.unicode.org/charts/pdf/u0300.pdf
+                             768 ; u+0300 combining grave accent
+                             769 ; u+0301 combining acute accent
+                             770 ; u+0302 combining circumflex accent
+                             771 ; u+0303 combining tilde
+                             772 ; u+0304 combining macron
+                             774 ; u+0306 combining breve
+                             775 ; u+0307 combining dot above
+                             776 ; u+0308 combining diaeresis
+                             777 ; u+0309 combining hook above
+                             778 ; u+030a combining ring above
+                             779 ; u+030b combining double acute accent
+                             780 ; u+030c combining caron
+                             795 ; u+031b combining horn
+                             803 ; u+0323 combining dot below
+                             804 ; u+0324 combining diaeresis below
+                             805 ; u+0325 combining ring below
+                             807 ; u+0327 combining cedilla
+                             813 ; u+032d combining circumflex accent below
+                             814 ; u+032e combining breve below
+                             816 ; u+0330 combining tilde below
+                             817 ; u+0331 combining macron below
                              )))
       (cl-flet* ((nonspacing-mark-p (char) (memq char slug-trim-chars))
                  (strip-nonspacing-marks (s) (string-glyph-compose
@@ -1749,11 +1821,11 @@
                (slug (-reduce-from #'cl-replace (strip-nonspacing-marks title) pairs)))
           (downcase slug)))))
 
-  ;; Excludes all node with the "NO_ORG_ROAM" tag from the org-roam database.
+  ;; excludes all node with the "no_org_roam" tag from the org-roam database.
   (setq org-roam-db-node-include-function
         (lambda ()
-          (not (member "NO_ORG_ROAM" (org-get-tags)))))
-  (setq org-agenda-hide-tags-regexp "NO_ORG_ROAM")
+          (not (member "no_org_roam" (org-get-tags)))))
+  (setq org-agenda-hide-tags-regexp "no_org_roam")
 
   (add-to-list 'display-buffer-alist
                '("\\*org-roam\\*"
@@ -1766,21 +1838,19 @@
 (add-to-list 'org-roam-capture-templates
              '("m" "main note" plain "%?"
                :if-new
-               (file+head "personal/main/%<%Y%m%d>-${slug}.org" "#+title: ${title}\n\n")
+               (file+head "personal/main/%<%y%m%d>-${slug}.org" "#+title: ${title}\n\n")
                :unnarrowed t))
 
 (add-to-list 'org-roam-capture-templates
              '("r" "reference note" plain "%?" ; (file "~/org/.templates/reference.org")
                :if-new
-               (file+head "personal/ref/%<%Y%m%d>-${slug}.org" "#+title: ${title}\n\n")
+               (file+head "personal/ref/%<%y%m%d>-${slug}.org" "#+title: ${title}\n\n")
                :unnarrowed t))
 
-(use-package org-roam
-  :disabled  ; disable until my workflow need this.
-  :bind-keymap
-  ("C-c n d" . org-roam-dailies-map)
-  :config
-  (require 'org-roam-dailies))
+;; org roam bibtex
+(use-package org-roam-bibtex
+  :ensure t
+  :after org-roam)
 
 (use-package org-roam-ui
   :disabled
@@ -1791,6 +1861,20 @@
         org-roam-ui-follow t
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
+
+;; org noter
+(use-package org-noter
+  :ensure t
+  :after (:any org pdf-view)
+  :config
+  ;; open notes in other window
+  (setq org-noter-notes-window-location 'other-frame
+        ;; stop opening new frames please
+        org-noter-always-create-frame nil
+        ;; set path
+        ;; org-noter-notes-search-path '(org_notes)
+        )
+  )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1828,9 +1912,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ein - ipython notebooks in gui emacs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Only launch if the executable exists.
+;; only launch if the executable exists.
 ;; (when (and my:jupyter_location my:jupyter_start_dir)
-;;   ;; Skewer mode is used by ein for running javascript in the notebook
+;;   ;; skewer mode is used by ein for running javascript in the notebook
 ;;   (use-package skewer-mode
 ;;     :ensure t)
 ;;   (use-package ein
@@ -1843,25 +1927,25 @@
 ;;     ;;     (require ein-file)))
 ;;     ;; ;; (setq ein:completion-backend 'ein:use-company-backend)
 ;;     ;; ;; when editing the emacs.el file, we do not want to start a new
-;;     ;; ;; Jupyter server each time we save, so we only start a new Jupyter
+;;     ;; ;; jupyter server each time we save, so we only start a new jupyter
 ;;     ;; ;; server if there currently isn't one running.
 ;;     ;; (defvar my-found-ein-server nil)
 ;;     ;; (dolist (my-current-process (process-list))
-;;     ;;   (when (string-match "EIN: Jupyter*" (process-name my-current-process))
+;;     ;;   (when (string-match "ein: jupyter*" (process-name my-current-process))
 ;;     ;;     (setq my-found-ein-server t))
 ;;     ;;   )
 ;;     )
 ;;   )
 
-;; (setq ein:console-executable "/home/pupil/Documents/projects/envs/general/bin/ipython")
+;; (setq ein:console-executable "/home/pupil/documents/projects/envs/general/bin/ipython")
 ;; (setq ein:console-args '("--simple-prompt" "--ssh" "homeserver_clean"))
 ;; (setq ein:console-security-dir "/home/pupil/jupyter_connection_files")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; autopair
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Automatically at closing brace, bracket and quote
-;; Update: Disable autopair and use electric-pair-mode
+;; automatically at closing brace, bracket and quote
+;; update: disable autopair and use electric-pair-mode
 ;; (use-package autopair
 ;;   ;; autopair disappeared from melpa
 ;;   ;; :ensure t
@@ -1869,7 +1953,7 @@
 ;;   :diminish autopair-mode
 ;;   :init
 ;;   (eval-when-compile
-;;     ;; Silence missing function warnings
+;;     ;; silence missing function warnings
 ;;     (declare-function autopair-global-mode "autopair.el"))
 ;;   :config
 ;;   (autopair-global-mode t)
@@ -1877,18 +1961,18 @@
 
 (electric-pair-mode 1)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Load hungry Delete, caus we're lazy
+;; load hungry delete, caus we're lazy
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Set hungry delete:
+;; set hungry delete:
 (if my:use-smart-hungry-delete
     (use-package smart-hungry-delete
       :ensure t
       :bind (("<backspace>" . smart-hungry-delete-backward-char)
-             ("C-h" . smart-hungry-delete-backward-char)
-             ("C-d" . smart-hungry-delete-forward-char))
+             ("c-h" . smart-hungry-delete-backward-char)
+             ("c-d" . smart-hungry-delete-forward-char))
       :init
       (eval-when-compile
-        ;; Silence missing function warnings
+        ;; silence missing function warnings
         (declare-function
          smart-hungry-delete-add-default-hooks "smart-hungry-delete.el"))
       :config
@@ -1900,7 +1984,7 @@
     :diminish hungry-delete-mode
     :init
     (eval-when-compile
-      ;; Silence missing function warnings
+      ;; silence missing function warnings
       (declare-function global-hungry-delete-mode "hungry-delete.el"))
     :config
     (global-hungry-delete-mode t)
@@ -1908,16 +1992,16 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Syntax Highlighting in CUDA
+;; syntax highlighting in cuda
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Load CUDA mode so we get syntax highlighting in .cu files
+;; load cuda mode so we get syntax highlighting in .cu files
 (use-package cuda-mode
   :ensure t
   :mode (("\\.cu\\'" . cuda-mode)
          ("\\.cuh\\'" . cuda-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Flyspell Mode for Spelling Corrections
+;; flyspell mode for spelling corrections
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package flyspell
   :ensure t
@@ -1928,17 +2012,17 @@
   :hydra
   (hydra-flyspell-correct
    (:color blue)
-   "Flyspell Correct"
-   ("a" flyspell-correct-auto-mode "Auto Mode" :color red)
-   ("b" flyspell-buffer "Check buffer")
-   ("r" flyspell-region "Check region")
-   ("n" flyspell-check-next-highlighted-word "Next Word")
-   ("p" flyspell-check-previous-highlighted-word "Previous Word")
-   ("w" (call-interactively 'flyspell-correct-at-point) "Word at Point")
+   "flyspell correct"
+   ("a" flyspell-correct-auto-mode "auto mode" :color red)
+   ("b" flyspell-buffer "check buffer")
+   ("r" flyspell-region "check region")
+   ("n" flyspell-check-next-highlighted-word "next word")
+   ("p" flyspell-check-previous-highlighted-word "previous word")
+   ("w" (call-interactively 'flyspell-correct-at-point) "word at point")
    )
   :init
   (eval-when-compile
-    ;; Silence missing function warnings
+    ;; silence missing function warnings
     (declare-function flyspell-goto-next-error "flyspell.el")
     (declare-function flyspell-mode "flyspell.el")
     (declare-function flyspell-prog-mode "flyspell.el"))
@@ -1949,7 +2033,7 @@
     :after flyspell)
   :config
   (defun flyspell-check-next-highlighted-word ()
-    "Custom function to spell check next highlighted word."
+    "custom function to spell check next highlighted word."
     (interactive)
     (flyspell-goto-next-error)
     (ispell-word))
@@ -1960,7 +2044,7 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Magit
+;; magit
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package magit
   :ensure t
@@ -2008,7 +2092,7 @@
     :commands (diff-hl-margin-mode)
     )
   :config
-  ;; Use purple to show diffs
+  ;; use purple to show diffs
   (custom-set-faces
      '(diff-hl-change
        ((t (:background "#5f00af" :foreground "#5f00af")))))
@@ -2038,7 +2122,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package cmake-mode
   :ensure t
-  :mode ("CMakeLists.txt" ".cmake")
+  :mode ("cmakelists.txt" ".cmake")
   :hook (cmake-mode . (lambda ()
                         (add-to-list 'company-backends 'company-cmake)))
   :config
@@ -2049,13 +2133,13 @@
     :hook (cmake-mode . (lambda ()
                           (cmake-font-lock-activate)
                           (font-lock-add-keywords
-                           nil '(("\\<\\(FIXME\\|TODO\\|BUG\\|DONE\\)"
+                           nil '(("\\<\\(fixme\\|todo\\|bug\\|done\\)"
                                   1 font-lock-warning-face t)))))
     )
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Bazel-mode
+;; bazel-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (if (not (file-directory-p "~/.emacs.d/plugins/"))
     (make-directory "~/.emacs.d/plugins/"))
@@ -2065,7 +2149,7 @@
      "~/.emacs.d/plugins/bazel-mode.el"))
 (if (file-exists-p "~/.emacs.d/plugins/bazel-mode.el")
     (use-package bazel-mode
-      :mode ("BUILD" "\\.bazel\\'" "\\.bzl'" "WORKSPACE\\'")
+      :mode ("build" "\\.bazel\\'" "\\.bzl'" "workspace\\'")
       )
   )
 
@@ -2113,7 +2197,7 @@
   (defun my:rust-mode-hook()
     (set (make-local-variable 'compile-command) "cargo run")
     (eval-when-compile
-      ;; Silence missing function warnings
+      ;; silence missing function warnings
       (declare-function flycheck-rust-setup "flycheck-rust.el"))
     (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
     )
@@ -2121,9 +2205,9 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Setup Dockerfile mode
-;; 1. Download file from GitHub
-;; 2. Load mode
+;; setup dockerfile mode
+;; 1. download file from github
+;; 2. load mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (if (not (file-directory-p "~/.emacs.d/plugins"))
     (make-directory "~/.emacs.d/plugins"))
@@ -2132,22 +2216,22 @@
      "https://raw.githubusercontent.com/spotify/dockerfile-mode/master/dockerfile-mode.el"
      "~/.emacs.d/plugins/dockerfile-mode.el"))
 (use-package dockerfile-mode
-  :mode ("Dockerfile"))
+  :mode ("dockerfile"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Package: yasnippet
+;; package: yasnippet
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package yasnippet
   :ensure t
   :diminish yas-minor-mode
   :init
   (eval-when-compile
-    ;; Silence missing function warnings
+    ;; silence missing function warnings
     (declare-function yas-global-mode "yasnippet.el"))
   :config
   (yas-reload-all)
   (add-hook 'prog-mode-hook #'yas-minor-mode)
-  ;; Add snippet support to lsp mode
+  ;; add snippet support to lsp mode
   (setq lsp-enable-snippet t)
   )
 (use-package yasnippet-snippets
@@ -2155,32 +2239,32 @@
   :after yasnippet
   :config
   (yas-reload-all))
-;; Apparently the company-yasnippet backend shadows all backends that
-;; come after it. To work around this we assign yasnippet to a different
+;; apparently the company-yasnippet backend shadows all backends that
+;; come after it. to work around this we assign yasnippet to a different
 ;; keybind since actual source completion is vital.
 ;;
-;; The above seems to not be an issue with LSP, but it is still nice to be
+;; the above seems to not be an issue with lsp, but it is still nice to be
 ;; able to only call up the snippets.
 (use-package company-yasnippet
-  :bind ("C-M-y" . company-yasnippet)
+  :bind ("c-m-y" . company-yasnippet)
   :after (yasnippet company)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Load asm-mode when opening assembly files
+;; load asm-mode when opening assembly files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package asm-mode
   :mode ("\\.s\\'"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Use markdown-mode for markdown files
+;; use markdown-mode for markdown files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package markdown-mode
   :ensure t
   :mode ("\\.md\\'" "\\.markdown\\'")
   :config
-  (define-key markdown-mode-map (kbd "M-p") nil)
-  (define-key markdown-mode-map (kbd "M-n") nil))
+  (define-key markdown-mode-map (kbd "m-p") nil)
+  (define-key markdown-mode-map (kbd "m-n") nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lua-mode
@@ -2197,35 +2281,35 @@
 (use-package tex-site
   :ensure auctex
   :mode ("\\.tex\\'" . latex-mode)
-  ;; When we byte-compile we need to have the autoloads loaded in order to
+  ;; when we byte-compile we need to have the autoloads loaded in order to
   ;; properly get auctex working, otherwise auctex is not loaded correctly
   :init
   (load "auctex-autoloads" nil t)
   :config
-  (setq-default TeX-auto-save t
-                TeX-parse-self t
-                TeX-source-correlate-start-server t)
+  (setq-default tex-auto-save t
+                tex-parse-self t
+                tex-source-correlate-start-server t)
   (cond
-   ((string-equal system-type "windows-nt") ; Microsoft Windows
+   ((string-equal system-type "windows-nt") ; microsoft windows
     (progn
-      (message "Windows does not have a PDF viewer set for auctex")))
-   ((string-equal system-type "darwin") ; Mac OS X
+      (message "windows does not have a pdf viewer set for auctex")))
+   ((string-equal system-type "darwin") ; mac os x
     (setq-default
-     TeX-view-program-list
-     '(("Skim"
-        "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")
+     tex-view-program-list
+     '(("skim"
+        "/applications/skim.app/contents/sharedsupport/displayline -b -g %n %o %b")
        )
-     TeX-view-program-selection '((output-pdf "Skim"))))
+     tex-view-program-selection '((output-pdf "skim"))))
    ((string-equal system-type "gnu/linux") ; linux
-    (setq-default TeX-view-program-list
-                  '(("Evince" "evince --page-index=%(outpage) %o"))
-                  TeX-view-program-selection '((output-pdf "Evince")))))
-  (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
-  (add-hook 'LaTeX-mode-hook 'auto-fill-mode)
-  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
-  (add-hook 'LaTeX-mode-hook 'flyspell-buffer)
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
-  (setq-default reftex-plug-into-AUCTeX t)
+    (setq-default tex-view-program-list
+                  '(("evince" "evince --page-index=%(outpage) %o"))
+                  tex-view-program-selection '((output-pdf "evince")))))
+  (add-hook 'latex-mode-hook 'tex-source-correlate-mode)
+  (add-hook 'latex-mode-hook 'auto-fill-mode)
+  (add-hook 'latex-mode-hook 'flyspell-mode)
+  (add-hook 'latex-mode-hook 'flyspell-buffer)
+  (add-hook 'latex-mode-hook 'turn-on-reftex)
+  (setq-default reftex-plug-into-auctex t)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2254,9 +2338,9 @@
 ;; prettier js mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Enable prettier minor mode only to js and jsx files for now
+;; enable prettier minor mode only to js and jsx files for now
 (defun enable-minor-mode (my-pair)
-  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+  "enable minor mode if filename match the regexp.  my-pair is a cons cell (regexp . minor-mode)."
   (if (buffer-file-name)
       (if (string-match (car my-pair) buffer-file-name)
       (funcall (cdr my-pair)))))
@@ -2283,10 +2367,10 @@
   :config
   (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
   (setq highlight-indent-guides-method 'character)
-  (set-face-foreground 'highlight-indent-guides-character-face "darkgray")
+  ;; (set-face-foreground 'highlight-indent-guides-character-face "darkgray")
   )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Appearance
+;; appearance
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (when (string-equal my:use-theme "darcula")
   (use-package jetbrains-darcula-theme
@@ -2298,7 +2382,7 @@
   (use-package doom-themes
     :ensure t
     :config
-    ;; Global settings (defaults)
+    ;; global settings (defaults)
 
     ;; if nil, bold is universally disabled
     (setq doom-themes-enable-bold t)
@@ -2309,34 +2393,37 @@
 
   (setq doom-one-light-brighter-modeline t
         doom-one-light-brighter-comments t)
-    ;; Load the selected theme
+
+  (setq doom-dracula-brighter-modeline t
+        doom-dracula-brighter-comments t)
+    ;; load the selected theme
     (load-theme my:use-theme t)
 
     (require 'doom-themes-ext-org)
-    ;; Corrects (and improves) org-mode's native fontification.
+    ;; corrects (and improves) org-mode's native fontification.
     (doom-themes-org-config)
     )
   )
 
-;; I don't care to see the splash screen
+;; i don't care to see the splash screen
 (setq inhibit-splash-screen t)
 
-;; Hide the scroll bar
+;; hide the scroll bar
 (scroll-bar-mode -1)
-;; Make mode bar small
+;; make mode bar small
 (set-face-attribute 'mode-line nil  :height my:font-size)
-;; Set the header bar font
+;; set the header bar font
 (set-face-attribute 'header-line nil  :height my:font-size)
-;; Set default window size and position
+;; set default window size and position
 (setq default-frame-alist
       '((top . 0) (left . 0) ;; position
         (width . 110) (height . 90) ;; size
         ))
-;; Enable line numbers on the LHS
+;; enable line numbers on the lhs
 (global-display-line-numbers-mode)
-;; Enable winner-mode
+;; enable winner-mode
 (winner-mode 1)
-;; Set the font to size 9 (90/10).
+;; set the font to size 9 (90/10).
 (set-face-attribute 'default nil :height my:font-size)
 
 (setq-default indicate-empty-lines t)
@@ -2346,19 +2433,19 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Enable which function mode and set the header line to display both the
+;; enable which function mode and set the header line to display both the
 ;; path and the function we're in
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (which-function-mode t)
 
-;; Remove function from mode bar
+;; remove function from mode bar
 (setq mode-line-misc-info
       (delete (assoc 'which-func-mode
                      mode-line-misc-info) mode-line-misc-info))
 
 
 (defmacro with-face (str &rest properties)
-  "Used to set the face of STR with PROPERTIES."
+  "used to set the face of str with properties."
   `(propertize ,str 'face (list ,@properties)))
 
 (defun sl/make-header ()
@@ -2389,7 +2476,7 @@
                       ;; :background "red"
                       :foreground "red"
                       :weight 'bold)))
-      (concat (if window-system ;; In the terminal the green is hard to read
+      (concat (if window-system ;; in the terminal the green is hard to read
                   (with-face sl/header
                              ;; :background "green"
                              ;; :foreground "black"
@@ -2408,15 +2495,15 @@
                          )))))
 
 (defun sl/display-header ()
-  "Create the header string and display it."
-  ;; The dark blue in the header for which-func is terrible to read.
-  ;; However, in the terminal it's quite nice
+  "create the header string and display it."
+  ;; the dark blue in the header for which-func is terrible to read.
+  ;; however, in the terminal it's quite nice
   (if window-system
       (custom-set-faces
        '(which-func ((t (:foreground "#8fb28f")))))
     (custom-set-faces
      '(which-func ((t (:foreground "blue"))))))
-  ;; Set the header line
+  ;; set the header line
   (setq header-line-format
         (list "-"
               '(which-func-mode ("" which-func-format))
@@ -2424,19 +2511,19 @@
                 (:eval (if (buffer-file-name)
                            (concat "[" (sl/make-header) "]")
                          "[%b]"))))))
-;; Call the header line update
+;; call the header line update
 (add-hook 'buffer-list-update-hook 'sl/display-header)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Powerline theme
+;; powerline theme
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; powerline theme where the modes are on the right side.
-(use-package powerline
-  :ensure t
-  :config
-  (powerline-default-theme))
+;; (use-package powerline
+;;   :ensure t
+;;   :config
+;;   (powerline-default-theme))
   ;; (defun powerline-right-theme ()
-  ;;   "Setup a mode-line with major and minor modes on the right side."
+  ;;   "setup a mode-line with major and minor modes on the right side."
   ;;   (interactive)
   ;;   (setq-default
   ;;    mode-line-format
@@ -2449,10 +2536,10 @@
   ;;              (face0 (if active 'powerline-active0 'powerline-inactive0))
   ;;              (face1 (if active 'powerline-active1 'powerline-inactive1))
   ;;              (face2 (if active 'powerline-active2 'powerline-inactive2))
-  ;;              ;; The 'r and 'l means "add padding on right/left"
+  ;;              ;; the 'r and 'l means "add padding on right/left"
   ;;              (lhs (list (powerline-raw
-  ;;                          (format "W%s|" (winum-get-number-string)) face1)
-  ;;                         (powerline-raw "L%5l|C%3c|" face1)
+  ;;                          (format "w%s|" (winum-get-number-string)) face1)
+  ;;                         (powerline-raw "l%5l|c%3c|" face1)
   ;;                         (powerline-vc face1)
   ;;                         (when vc-mode (powerline-raw "|" face1 'l))))
   ;;              (center (list
@@ -2462,12 +2549,12 @@
   ;;                       ;; that we are viewing
   ;;                       ;; (powerline-raw "%6p" face1 'r)
   ;;                       ))
-  ;;              (rhs (list ;; Channel tracking if using erc IRC mode
+  ;;              (rhs (list ;; channel tracking if using erc irc mode
   ;;                    (when (and (boundp 'erc-track-minor-mode)
   ;;                               erc-track-minor-mode)
   ;;                      (powerline-raw erc-modified-channels-object
   ;;                                     face2 'l))
-  ;;                    ;; Show major mode
+  ;;                    ;; show major mode
   ;;                    (powerline-raw "|" face1 'l)
   ;;                    (powerline-major-mode face2)
   ;;                    (powerline-process face2)
@@ -2486,7 +2573,7 @@
 
 (my:set-custom-faces)
 
-;; Set tramp remote path
+;; set tramp remote path
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/")
 (require 'tramp)
 (add-to-list 'Info-directory-list "/usr/local/share/info/")
@@ -2497,19 +2584,24 @@
 ;;                    "remote-shell" "/usr/bin/bash"))
 ;; ;; (setq tramp-default-method "ssh")
 
-;; Disable menu bar
+;; disable menu bar
 (menu-bar-mode -1)
 
-;; ;; Zones
+;; use doom modeline
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  )
+;; ;; zones
 (require 'zones)
 
 ;; transpose windows
 (use-package transpose-frame
   :ensure t
   )
-;; Dont ask for confirmation when exiting emacs with a process
+;; dont ask for confirmation when exiting emacs with a process
 (setq confirm-kill-processes nil)
-;; Dont ask confimation when killing buffer witha process
+;; dont ask confimation when killing buffer witha process
 (setq kill-buffer-query-functions (delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
 ;; plantuml
@@ -2527,31 +2619,6 @@
   (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
   )
 
+(put 'downcase-region 'disabled nil)
+
 ;;; init  ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(c-noise-macro-names '("constexpr"))
- '(package-selected-packages
-   '(transpose-frame transpose-fram plantuml-mode cmake-font-lock powerline doom-themes highlight-indent-guides prettier-js tide auctex lua-mode yasnippet-snippets yasnippet flycheck-rust rust-mode json-mode yaml-mode cmake-mode gitignore-mode git-timemachine diff-hl forge magit cuda-mode hungry-delete ein skewer-mode web-mode google-c-style js2-mode vlf writegood-mode multiple-cursors string-inflection flycheck company-box company-prescient company lsp-ui lsp-pyright modern-cpp-font-lock clang-format pyvenv python-black realgud visual-regexp-steroids undo-tree zzz-to-char avy which-key beacon rainbow-delimiters origami edit-server pinentry rg wgrep winum lsp-ivy flyspell-correct-ivy counsel-etags counsel-projectile counsel swiper ivy-prescient ivy use-package-hydra hydra all-the-icons ws-butler diminish auto-package-update async esup use-package)))
-(put 'upcase-region 'disabled nil)
-(put 'narrow-to-region 'disabled nil)
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(avy-lead-face ((t (:foreground "black" :background "#F0F3BE" :bold t :underline t))))
- '(avy-lead-face-0 ((t (:foreground "black" :background "#F0F3BE" :bold t :underline t))))
- '(company-tooltip ((t (:background nil))))
- '(company-tooltip-selection ((t (:background nil :underline t))))
- '(diff-hl-change ((t (:background "#5f00af" :foreground "#5f00af"))))
- '(highlight ((t (:background nil :foreground nil :underline t))))
- '(ivy-current-match ((t (:background nil :underline t))))
- '(ivy-minibuffer-match-face-1 ((t (:background "#BEF3D3" :foreground "black" :bold t))))
- '(powerline-active1 ((t (:background "grey" :foreground "black" :bold t :underline t))))
- '(powerline-active2 ((t (:background "grey" :foreground "black" :bold t :underline t))))
- '(swiper-match-face-1 ((t (:foregound "black" :background "#BEF3D3" :bold t))))
- '(which-func ((t (:foreground "#8fb28f")))))
