@@ -1755,12 +1755,14 @@
   :bind
   (("C-c n l" . org-roam-buffer-toggle)
   ("C-c n f" . org-roam-node-find)               ; search with: title, tags, notebook
-  ("C-c n f" . my/counsel-rg-org-roam-directory) ; full text search
+  ("C-c n F" . my/counsel-rg-org-roam-directory) ; full text search
   ("C-c n g" . org-roam-graph)
   ("C-c n i" . org-roam-node-insert)
   ("C-c n c" . org-roam-capture)
   ("C-c n r" . org-roam-node-random)
   ("C-c n t" . org-roam-tag-add)
+  ("C-c n e" . org-roam-ref-add)
+  ("C-c n E" . org-roam-ref-find)
   :map org-mode-map
   ("c-m-i" . completion-at-point))
   :init
@@ -1868,13 +1870,15 @@
   :after (:any org pdf-view)
   :config
   ;; open notes in other window
-  (setq org-noter-notes-window-location 'other-frame
+  (setq
+   ;; org-noter-notes-window-location 'other-frame
         ;; stop opening new frames please
         org-noter-always-create-frame nil
         ;; See whole frame
         org-noter-hide-other nil
         ;; set path
         org-noter-notes-search-path (list org_notes)
+        org-noter-separate-notes-from-heading t
         )
   )
 
