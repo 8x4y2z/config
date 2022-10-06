@@ -188,6 +188,7 @@
 (global-set-key (kbd "M-s <up>")    'windmove-up)
 (global-set-key (kbd "M-s <down>")  'windmove-down)
 
+
 ;; Foculs to new window after split
 ;; https://stackoverflow.com/a/6465415
 (global-set-key "\C-x2" (lambda () (interactive)(split-window-vertically) (other-window 1)))
@@ -1539,6 +1540,7 @@
   (define-key org-mode-map (kbd "C-c n n") 'org-id-get-create)
   (define-key org-mode-map (kbd "C-x n n") 'org-toggle-narrow-to-subtree)
   (setq org-link-frame-setup '((file . find-file)))
+  (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
   ))
 
 ;; Academic paper writing
@@ -1546,6 +1548,14 @@
   (add-to-list 'org-latex-classes
                '("apa6"
                  "\\documentclass{apa6}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (add-to-list 'org-latex-classes
+               '("LJMU"
+                 "\\documentclass{LJMU}"
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
@@ -1708,9 +1718,9 @@
   :config
     ;; again, we can set the default library
     (setq org-ref-default-bibliography "~/zotero/library.bib")
-    ;; the default citation type of org-ref is cite:, but i use citep: much more often
+    ;; the default citation type of org-ref is cite:, but i use citet: much more often
     ;; i therefore changed the default type to the latter.
-    (setq org-ref-default-citation-link "citep")
+    (setq org-ref-default-citation-link "citet")
     ;; Point To Notes Directory
     (setq org-ref-notes-directory org_notes)
 
@@ -1729,7 +1739,7 @@
   ;; automatically annotate highlights
   (setq pdf-annot-activate-created-annotations t)
   ;; use normal isearch
-  (define-key pdf-view-mode-map (kbd "c-s") 'isearch-forward)
+  (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
   )
 
 
@@ -1764,7 +1774,7 @@
   ("C-c n e" . org-roam-ref-add)
   ("C-c n E" . org-roam-ref-find)
   :map org-mode-map
-  ("c-m-i" . completion-at-point))
+  ("C-M-i" . completion-at-point))
   :init
   (setq org-roam-v2-ack t)
   :config
@@ -2625,6 +2635,15 @@
   (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t)))
   )
 
+;; for frames
+(global-set-key (kbd "C-<tab>") 'other-frame)
+;; (use-package framemove
+;;   :ensure t
+;;   :config
+;;   (setq framemove-hook-into-windmove t)
+;;   )
+
 (put 'downcase-region 'disabled nil)
 
+(put 'upcase-region 'disabled nil)
 ;;; init  ends here
