@@ -2643,7 +2643,46 @@
 ;;   (setq framemove-hook-into-windmove t)
 ;;   )
 
-(put 'downcase-region 'disabled nil)
+;; detour for quick navigating
+(use-package detour
+  :ensure t
+  :bind
+  (("C-c ." . detour-mark)
+  ("C-c ," . detour-back))
+  )
 
+
+(put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
+(put 'narrow-to-region 'disabled nil)
+(put 'set-goal-column 'disabled nil)
 ;;; init  ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(c-noise-macro-names '("constexpr"))
+ '(package-selected-packages
+   '(detour zzz-to-char zones yasnippet-snippets yaml-mode ws-butler writegood-mode winum which-key web-mode vlf visual-regexp-steroids use-package-hydra undo-tree transpose-frame tide skewer-mode rust-mode rg realgud rainbow-delimiters pyvenv python-black prettier-js powerline plantuml-mode pinentry pdf-tools origami org-roam-bibtex org-ref org-noter multiple-cursors modern-cpp-font-lock lua-mode lsp-ui lsp-pyright lsp-ivy json-mode ivy-prescient ivy-bibtex hungry-delete highlight-indent-guides google-c-style git-timemachine git-modes ggtags forge flyspell-correct-ivy flycheck-rust esup ein edit-server doom-themes doom-modeline diminish diff-hl cuda-mode counsel-projectile counsel-etags company-prescient company-box cmake-font-lock clang-format beacon auto-package-update auctex async all-the-icons))
+ '(safe-local-variable-values
+   '((eval progn
+           (make-local-variable 'process-environment)
+           (setq process-environment
+                 (copy-sequence process-environment))
+           (setenv "PYTHONPATH" "/home/pupil/Documents/upgrad/msc:$PYTHONPATH")))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(avy-lead-face ((t (:foreground "black" :background "#F0F3BE" :bold t :underline t))))
+ '(avy-lead-face-0 ((t (:foreground "black" :background "#F0F3BE" :bold t :underline t))))
+ '(company-tooltip ((t (:background nil))))
+ '(company-tooltip-selection ((t (:background nil :underline t))))
+ '(diff-hl-change ((t (:background "#5f00af" :foreground "#5f00af"))))
+ '(highlight ((t (:background nil :foreground nil :underline t))))
+ '(ivy-current-match ((t (:background nil :underline t))))
+ '(ivy-minibuffer-match-face-1 ((t (:background "#BEF3D3" :foreground "black" :bold t))))
+ '(swiper-match-face-1 ((t (:foregound "black" :background "#BEF3D3" :bold t))))
+ '(which-func ((t (:foreground "#8fb28f")))))
