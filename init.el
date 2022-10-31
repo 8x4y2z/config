@@ -1129,7 +1129,9 @@
   :init
   (setenv "TERM" "dumb")
   :config
-  (setq realgud:pdb-command-name "python -m pdb"))
+  (setq realgud:pdb-command-name "python -m pdb")
+  (setq realgud-safe-mode nil)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python mode settings
@@ -2019,45 +2021,45 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; flyspell mode for spelling corrections
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package flyspell
-  :ensure t
-  :diminish flyspell-mode
-  :hook ((text-mode . flyspell-mode)
-         (prog-mode . flyspell-prog-mode)
-         (org-mode . flyspell-mode))
-  :hydra
-  (hydra-flyspell-correct
-   (:color blue)
-   "flyspell correct"
-   ("a" flyspell-correct-auto-mode "auto mode" :color red)
-   ("b" flyspell-buffer "check buffer")
-   ("r" flyspell-region "check region")
-   ("n" flyspell-check-next-highlighted-word "next word")
-   ("p" flyspell-check-previous-highlighted-word "previous word")
-   ("w" (call-interactively 'flyspell-correct-at-point) "word at point")
-   )
-  :init
-  (eval-when-compile
-    ;; silence missing function warnings
-    (declare-function flyspell-goto-next-error "flyspell.el")
-    (declare-function flyspell-mode "flyspell.el")
-    (declare-function flyspell-prog-mode "flyspell.el"))
-  (setq flyspell-issue-welcome-flag nil)
-  (use-package flyspell-correct
-    :ensure t
-    :diminish flyspell-correct-mode
-    :after flyspell)
-  :config
-  (defun flyspell-check-next-highlighted-word ()
-    "custom function to spell check next highlighted word."
-    (interactive)
-    (flyspell-goto-next-error)
-    (ispell-word))
+;; (use-package flyspell
+;;   :ensure t
+;;   :diminish flyspell-mode
+;;   :hook ((text-mode . flyspell-mode)
+;;          (prog-mode . flyspell-prog-mode)
+;;          (org-mode . flyspell-mode))
+;;   :hydra
+;;   (hydra-flyspell-correct
+;;    (:color blue)
+;;    "flyspell correct"
+;;    ("a" flyspell-correct-auto-mode "auto mode" :color red)
+;;    ("b" flyspell-buffer "check buffer")
+;;    ("r" flyspell-region "check region")
+;;    ("n" flyspell-check-next-highlighted-word "next word")
+;;    ("p" flyspell-check-previous-highlighted-word "previous word")
+;;    ("w" (call-interactively 'flyspell-correct-at-point) "word at point")
+;;    )
+;;   :init
+;;   (eval-when-compile
+;;     ;; silence missing function warnings
+;;     (declare-function flyspell-goto-next-error "flyspell.el")
+;;     (declare-function flyspell-mode "flyspell.el")
+;;     (declare-function flyspell-prog-mode "flyspell.el"))
+;;   (setq flyspell-issue-welcome-flag nil)
+;;   (use-package flyspell-correct
+;;     :ensure t
+;;     :diminish flyspell-correct-mode
+;;     :after flyspell)
+;;   :config
+;;   (defun flyspell-check-next-highlighted-word ()
+;;     "custom function to spell check next highlighted word."
+;;     (interactive)
+;;     (flyspell-goto-next-error)
+;;     (ispell-word))
 
-  (global-set-key (kbd "<f7>") 'flyspell-buffer)
-  (global-set-key (kbd "<f8>") 'flyspell-correct-previous)
-  (global-set-key (kbd "<f9>") 'flyspell-correct-next)
-  )
+;;   (global-set-key (kbd "<f7>") 'flyspell-buffer)
+;;   (global-set-key (kbd "<f8>") 'flyspell-correct-previous)
+;;   (global-set-key (kbd "<f9>") 'flyspell-correct-next)
+;;   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; magit
@@ -2410,14 +2412,21 @@
   (setq doom-one-light-brighter-modeline t
         doom-one-light-brighter-comments t)
 
-  (setq doom-dracula-brighter-modeline t
-        doom-dracula-brighter-comments t)
+  (setq
+   ;; doom-dracula-brighter-modeline t
+         doom-dracula-brighter-comments t)
     ;; load the selected theme
     (load-theme my:use-theme t)
 
     (require 'doom-themes-ext-org)
     ;; corrects (and improves) org-mode's native fontification.
     (doom-themes-org-config)
+    ;; Solarie mode to dim sidears and popups
+    (use-package solaire-mode
+      :ensure t
+      :config
+      (solaire-global-mode +1)
+      )
     )
   )
 
@@ -2452,7 +2461,18 @@
 ;; enable which function mode and set the header line to display both the
 ;; path and the function we're in
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(which-function-mode t)
+(which-function-mode 1)
+  (eval-after-load "which-func"
+    '(setq which-func-modes '(java-mode
+                         c++-mode
+                         org-mode
+                         c-mode
+                         js2-mode
+                         cmake-mode
+                         rust-mode
+                         python-mode
+                         emacs-lisp-mode))
+    )
 
 ;; remove function from mode bar
 (setq mode-line-misc-info
@@ -2651,11 +2671,16 @@
   ("C-c ," . detour-back))
   )
 
+;; Expand package for quick selecting region
+(use-package expand-region
+  :ensure t
+  :bind ("C-=" . er/expand-region))
 
 (put 'downcase-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 (put 'narrow-to-region 'disabled nil)
 (put 'set-goal-column 'disabled nil)
+
 ;;; init  ends here
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -2664,13 +2689,24 @@
  ;; If there is more than one, they won't work right.
  '(c-noise-macro-names '("constexpr"))
  '(package-selected-packages
-   '(detour zzz-to-char zones yasnippet-snippets yaml-mode ws-butler writegood-mode winum which-key web-mode vlf visual-regexp-steroids use-package-hydra undo-tree transpose-frame tide skewer-mode rust-mode rg realgud rainbow-delimiters pyvenv python-black prettier-js powerline plantuml-mode pinentry pdf-tools origami org-roam-bibtex org-ref org-noter multiple-cursors modern-cpp-font-lock lua-mode lsp-ui lsp-pyright lsp-ivy json-mode ivy-prescient ivy-bibtex hungry-delete highlight-indent-guides google-c-style git-timemachine git-modes ggtags forge flyspell-correct-ivy flycheck-rust esup ein edit-server doom-themes doom-modeline diminish diff-hl cuda-mode counsel-projectile counsel-etags company-prescient company-box cmake-font-lock clang-format beacon auto-package-update auctex async all-the-icons))
+   '(lsp-ui lsp-mode lsp-pyright lsp-ivy zzz-to-char zones yasnippet-snippets yaml-mode ws-butler writegood-mode winum which-key web-mode vlf visual-regexp-steroids use-package-hydra undo-tree transpose-frame tide spinner skewer-mode rust-mode rg realgud rainbow-delimiters pyvenv python-black prettier-js powerline plantuml-mode pinentry pdf-tools origami org-roam-bibtex org-ref org-noter multiple-cursors modern-cpp-font-lock lua-mode json-mode ivy-prescient ivy-bibtex hungry-delete highlight-indent-guides google-c-style git-timemachine git-modes ggtags forge flyspell-correct-ivy flycheck-rust expand-region esup ein edit-server doom-themes doom-modeline diminish diff-hl detour cuda-mode counsel-projectile counsel-etags company-prescient company-box cmake-font-lock clang-format beacon auto-package-update auctex async all-the-icons))
  '(safe-local-variable-values
    '((eval progn
-           (make-local-variable 'process-environment)
-           (setq process-environment
-                 (copy-sequence process-environment))
-           (setenv "PYTHONPATH" "/home/pupil/Documents/upgrad/msc:$PYTHONPATH")))))
+           (setq python-shell-interpreter "~/Documents/projects/envs/pytorch/bin/python")
+           (setq flycheck-python-pylint-executable "~/Documents/projects/envs/pytorch/bin/python")
+           (setenv "PYTHONPATH"
+                   (concat
+                    (getenv "PYTHONPATH")
+                    ":/home/pupil/Documents/upgrad/msc")))
+     (eval progn
+           (setenv "PYTHONPATH"
+                   (concat
+                    (getenv "PYTHONPATH")
+                    ":/home/pupil/Documents/projects/detectron2"))
+           (setenv "PYTHONPATH"
+                   (concat
+                    (getenv "PYTHONPATH")
+                    ":/home/pupil/Documents/projects/learn/cocoapi/PythonAPI"))))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
