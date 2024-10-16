@@ -384,16 +384,36 @@
 
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
-        modus-themes-bold-constructs nil)
+        modus-themes-fringes 'subtle
+
+        modus-themes-completions'((matches . (extrabold))
+                                  (selection . (semibold italic text-also)))
+
+        modus-themes-bold-constructs t)
 
   ;; Maybe define some palette overrides, such as by using our presets
   (setq modus-themes-common-palette-overrides
-        modus-themes-preset-overrides-faint)
+        '((fg-line-number-inactive fg-main)
+          (fg-line-number-active fg-main)
+          (bg-line-number-inactive unspecified)
+          (bg-line-number-active unspecified)
+          (bg-mode-line-active bg-main)
+          (bg-mode-line-inactive bg-main)
+
+          (border-mode-line-active unspecified)
+          (border-mode-line-inactive unspecified)
+
+          )
+
+        ;; modus-themes-preset-overrides-faint
+        )
 
   ;; Increase modeline height
   (modus-themes-with-colors
     (custom-set-faces
-     '(mode-line ((t :height 140)))))
+     '(mode-line-active ((t :height 140)))
+     '(mode-line-inactive ((t :height 140)))
+     ))
   ;; Load the theme of your choice.
   (load-theme 'modus-vivendi t)
   ;; (load-theme 'modus-operandi t)
