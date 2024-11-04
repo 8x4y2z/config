@@ -525,9 +525,17 @@
 (setq-default pdb-command-name "python -m pdb")
 (use-package pyvenv
   :ensure t
+  :init
+  (setenv "WORKON_HOME" "/home/pupil/Documents/projects/envs")
   :config
   (pyvenv-mode 1)
-  (setenv "WORKON_HOME" "/home/pupil/Documents/projects/envs"))
+  (setq pyvenv-post-activate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/python")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter "python"))))
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Clang-format
@@ -571,6 +579,14 @@
 ;; (setq gdb-default-window-configuration-file "~/.emacs.d/my-gdb-many-windows")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Cuda mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package cuda-mode
+  :ensure t
+  :mode (("\\.cu\\'" . cuda-mode)
+         ("\\.cuh\\'" . cuda-mode)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; multiple-cursors  - https://github.com/magnars/multiple-cursors.el
 ;; Allows you to have multiple cursors on different lines so you can
 ;; easily edit multiple lines at once.
@@ -599,24 +615,27 @@
 
 (with-eval-after-load "org"
   (progn
-  (define-key org-mode-map (kbd "C-c n n") 'org-id-get-create)
-  (define-key org-mode-map (kbd "C-x n n") 'org-toggle-narrow-to-subtree)
-  (setq org-link-frame-setup '((file . find-file)))
-  (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
-  (setq org-latex-create-formula-image-program 'imagemagick)
-  (setq imagemagick '(imagemagick :programs
-               ("latex" "convert")
-               :description "pdf > png"
-               :message "you need to install the programs: latex and imagemagick."
-               :image-input-type "pdf"
-               :image-output-type "png"
-               :image-size-adjust (1.0 . 1.0)
-               :latex-compiler ("pdflatex -interaction=nonstopmode -output-directory %o %f")
-               :image-converter ;;on windows we need "magick" command prefix
-               ("convert -density %D -trim -antialias %f -quality 100 %O")))
-  (add-to-list 'org-preview-latex-process-alist imagemagick)
-  (setq org-preview-latex-default-process 'imagemagick)
-  ))
+    (define-key org-mode-map (kbd "C-c n n") 'org-id-get-create)
+    (define-key org-mode-map (kbd "C-x n n") 'org-toggle-narrow-to-subtree)
+    (setq org-link-frame-setup '((file . find-file)))
+    (setq org-latex-pdf-process (list "latexmk -f -pdf %f"))
+    ;; (setq org-latex-create-formula-image-program 'imagemagick)
+    (setq org-latex-create-formula-image-program 'dvipng)
+    (setq imagemagick '(imagemagick :programs
+                                    ("latex" "convert")
+                                    :description "pdf > png"
+                                    :message "you need to install the programs: latex and imagemagick."
+                                    :image-input-type "pdf"
+                                    :image-output-type "png"
+                                    :image-size-adjust (1.0 . 1.0)
+                                    :latex-compiler ("pdflatex -interaction=nonstopmode -output-directory %o %f")
+                                    :image-converter ;;on windows we need "magick" command prefix
+                                    ("convert -density %D -trim -antialias %f -quality 100 %O")))
+    (add-to-list 'org-preview-latex-process-alist imagemagick)
+    ;; (setq org-preview-latex-default-process 'imagemagick)
+    (plist-put org-format-latex-options :background "Transparent")
+    (plist-put org-format-latex-options :scale 1.5)
+    ))
 
 ;; Academic paper writing
 (with-eval-after-load 'ox-latex
@@ -1116,11 +1135,34 @@
   ;; used by `completion-at-point'.  The order of the functions matters, the
   ;; first function returning a result wins.  Note that the list of buffer-local
   ;; completion functions takes precedence over the global list.
+  (setq cape-dabbrev-min-length 2)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-abbrev)
   (add-hook 'completion-at-point-functions #'cape-file)
   (add-hook 'completion-at-point-functions #'cape-elisp-block)
-  ;; (add-hook 'completion-at-point-functions #'cape-history)
+  (add-hook 'completion-at-point-functions #'cape-history)
   ;; ...
+  )
+
+;; Corfu terminal
+(use-package corfu-terminal
+  :straight (corfu-terminal
+             :type git
+             :repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
+  :ensure t
+  :config (unless (display-graphic-p)
+            (corfu-terminal-mode +1)))
+
+(use-package dabbrev
+  ;; Swap M-/ and C-M-/
+  :bind (("M-/" . dabbrev-completion)
+         ("C-M-/" . dabbrev-expand))
+  :custom
+  (dabbrev-upcase-means-case-search t)
+  (dabbrev-check-all-buffers nil)
+  (dabbrev-check-other-buffers t)
+  (dabbrev-friend-buffer-function 'dabbrev--same-major-mode-p)
+  (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'"))
   )
 
 ;; Optionally use the `orderless' completion style.
@@ -1129,7 +1171,7 @@
   :custom
   ;; (orderless-style-dispatchers '(orderless-affix-dispatch))
   ;; (orderless-component-separator #'orderless-escapable-split-on-space)
-  (completion-styles '(orderless basic))
+  (completion-styles '(orderless partial-completion basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles partial-completion)))))
 
@@ -1235,7 +1277,16 @@
 (use-package lsp-mode
   :ensure t
   :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (defun my/orderless-dispatch-flex-first (_pattern index _total)
+    (and (eq index 0) 'orderless-flex))
+  (defun my/lsp-mode-setup-completion()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))
+    ;; Optionally configure the first word as flex filtered
+    (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+    ;; Optionally configure the cape capf buster
+    (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+    )
   (setq lsp-keymap-prefix "C-c l")
   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
          (python-mode . lsp)
@@ -1247,7 +1298,9 @@
          (cmake-ts-mode . lsp)
          (rust-ts-mode . lsp)
          ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
+         (lsp-mode . lsp-enable-which-key-integration)
+         (lsp-completion-mode . my/lsp-mode-setup-completion)
+         )
   :config
   (setq read-process-output-max (* 1024 1024)) ;; 1MB
   (setq lsp-diagnostics-provider :flycheck)
@@ -1286,7 +1339,10 @@
   :after lsp-mode
   :ensure t
   :init
-  (setq lsp-pyright-multi-root nil)
+  (setq lsp-pyright-multi-root nil
+        lsp-pyright-python-search-functions
+        '(lsp-pyright--locate-python-python)
+        )
   :hook (python-mode . (lambda ()
                           (require 'lsp-pyright)
                           (lsp))); or lsp-deferred
